@@ -19,6 +19,7 @@
 
 package org.apache.iotdb.commons.utils;
 
+import org.apache.iotdb.commons.auth.entity.LabelPolicy;
 import org.apache.iotdb.commons.auth.entity.PrivilegeType;
 
 import org.apache.tsfile.common.conf.TSFileConfig;
@@ -607,5 +608,34 @@ public class SerializeUtils {
     for (int i = 0; i < length; i++) {
       types.add(PrivilegeType.values()[buffer.getInt()]);
     }
+  }
+
+  public static void serializeLabelPolicies(List<LabelPolicy> policies, DataOutputStream stream)
+      throws IOException {
+    if (policies == null) {
+      stream.writeInt(0);
+      return;
+    }
+    stream.writeInt(policies.size());
+    for (LabelPolicy policy : policies) {
+      stream.writeUTF(policy.getPolicyExpression());
+      stream.writeBoolean(policy.isForRead());
+      stream.writeBoolean(policy.isForWrite());
+    }
+  }
+
+  public static List<LabelPolicy> deserializeLabelPolicies(ByteBuffer buffer) {
+    int size = buffer.getInt();
+    if (size == 0) {
+      return Collections.emptyList();
+    }
+    List<LabelPolicy> policies = new ArrayList<>(size);
+    for (int i = 0; i < size; i++) {
+      String expression = deserializeString(buffer);
+      boolean forRead = buffer.get() != 0;
+      boolean forWrite = buffer.get() != 0;
+      policies.add(new LabelPolicy(expression, forRead, forWrite));
+    }
+    return policies;
   }
 }

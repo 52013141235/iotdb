@@ -40,8 +40,12 @@ public class User extends Role {
 
   private boolean isOpenIdUser = false; // default NO openIdUser
 
+  private List<LabelPolicy> labelPolicies;
+
   public User() {
     // empty constructor
+    this.roleSet = new HashSet<>();
+    this.labelPolicies = new ArrayList<>();
   }
 
   /**
@@ -54,6 +58,7 @@ public class User extends Role {
     super(name);
     this.password = password;
     this.roleSet = new HashSet<>();
+    this.labelPolicies = new ArrayList<>();
   }
 
   /** ---------- set func ---------------* */
@@ -73,6 +78,22 @@ public class User extends Role {
     roleSet.add(roleName);
   }
 
+  public void setLabelPolicies(List<LabelPolicy> labelPolicies) {
+    this.labelPolicies = labelPolicies;
+  }
+
+  public void addLabelPolicy(LabelPolicy policy) {
+    this.labelPolicies.add(policy);
+  }
+
+  public void removeLabelPolicy(LabelPolicy policy) {
+    this.labelPolicies.remove(policy);
+  }
+
+  public void clearLabelPolicies() {
+    this.labelPolicies.clear();
+  }
+
   /** ------------ get func ----------------* */
   public String getPassword() {
     return password;
@@ -90,6 +111,10 @@ public class User extends Role {
     return roleSet;
   }
 
+  public List<LabelPolicy> getLabelPolicies() {
+    return labelPolicies;
+  }
+
   public TUserResp getUserInfo(ModelType modelType) {
     TUserResp resp = new TUserResp();
     resp.setPermissionInfo(getRoleInfo(modelType));
@@ -97,6 +122,24 @@ public class User extends Role {
     resp.setIsOpenIdUser(isOpenIdUser);
     resp.setRoleSet(roleSet);
     return resp;
+  }
+
+  public LabelPolicy getReadPolicy() {
+    for (LabelPolicy policy : labelPolicies) {
+      if (policy.isForRead()) {
+        return policy;
+      }
+    }
+    return null;
+  }
+
+  public LabelPolicy getWritePolicy() {
+    for (LabelPolicy policy : labelPolicies) {
+      if (policy.isForWrite()) {
+        return policy;
+      }
+    }
+    return null;
   }
 
   /** -------------- misc ----------------* */
@@ -117,7 +160,8 @@ public class User extends Role {
     return super.equals((Role) user)
         && Objects.equals(roleSet, user.roleSet)
         && Objects.equals(password, user.password)
-        && Objects.equals(isOpenIdUser, user.isOpenIdUser);
+        && Objects.equals(isOpenIdUser, user.isOpenIdUser)
+        && Objects.equals(labelPolicies, user.labelPolicies);
   }
 
   @Override
@@ -128,7 +172,8 @@ public class User extends Role {
         super.getPathPrivilegeList(),
         super.getSysPrivilege(),
         roleSet,
-        isOpenIdUser);
+        isOpenIdUser,
+        labelPolicies);
   }
 
   @Override
@@ -156,6 +201,7 @@ public class User extends Role {
       // unreachable
     }
     SerializeUtils.serializeStringList(new ArrayList<>(roleSet), dataOutputStream);
+    SerializeUtils.serializeLabelPolicies(labelPolicies, dataOutputStream);
 
     return ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
   }
@@ -186,6 +232,7 @@ public class User extends Role {
     }
     super.setPrivilegeList(privilegeList);
     roleSet = new HashSet<>(SerializeUtils.deserializeStringList(buffer));
+    labelPolicies = SerializeUtils.deserializeLabelPolicies(buffer);
   }
 
   /**
@@ -211,6 +258,8 @@ public class User extends Role {
         + roleSet
         + ", isOpenIdUser="
         + isOpenIdUser
+        + ", labelPolicies="
+        + labelPolicies
         + '}';
   }
 }
