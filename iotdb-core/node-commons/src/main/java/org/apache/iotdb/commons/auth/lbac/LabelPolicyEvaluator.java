@@ -30,12 +30,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 标签策略评估器，负责解析和评估标签策略表达式。
- * 支持以下运算符：
- * - 比较运算符：=、!=（适用于字符串标签和数字标签）
- * - 比较运算符：>、<、>=、<=（仅适用于数字标签）
- * - 逻辑运算符：AND、OR
- * - 优先级控制：()
+ * 标签策略评估器，负责解析和评估标签策略表达式。 支持以下运算符： - 比较运算符：=、!=（适用于字符串标签和数字标签） - 比较运算符：>、<、>=、<=（仅适用于数字标签） -
+ * 逻辑运算符：AND、OR - 优先级控制：()
  */
 public class LabelPolicyEvaluator {
   /** 策略表达式最大长度 */
@@ -43,10 +39,12 @@ public class LabelPolicyEvaluator {
 
   /** 逻辑操作符 */
   private static final String TOKEN_AND = "and";
+
   private static final String TOKEN_OR = "or";
 
   /** 比较操作符 */
   private static final String TOKEN_EQ = "=";
+
   private static final String TOKEN_NEQ = "!=";
   private static final String TOKEN_GT = ">";
   private static final String TOKEN_GTE = ">=";
@@ -54,12 +52,12 @@ public class LabelPolicyEvaluator {
   private static final String TOKEN_LTE = "<=";
 
   /** 标签表达式的正则表达式模式 - 字符串值（带双引号） */
-  private static final Pattern STRING_LABEL_PATTERN = Pattern
-      .compile("([a-zA-Z][a-zA-Z0-9_]*)\\s*(=|!=)\\s*\"([^\"]+)\"");
+  private static final Pattern STRING_LABEL_PATTERN =
+      Pattern.compile("([a-zA-Z][a-zA-Z0-9_]*)\\s*(=|!=)\\s*\"([^\"]+)\"");
 
   /** 标签表达式的正则表达式模式 - 数字值（不带引号） */
-  private static final Pattern NUMERIC_LABEL_PATTERN = Pattern
-      .compile("([a-zA-Z][a-zA-Z0-9_]*)\\s*(=|!=|>|<|>=|<=)\\s*([0-9]+(?:\\.[0-9]+)?)");
+  private static final Pattern NUMERIC_LABEL_PATTERN =
+      Pattern.compile("([a-zA-Z][a-zA-Z0-9_]*)\\s*(=|!=|>|<|>=|<=)\\s*([0-9]+(?:\\.[0-9]+)?)");
 
   /** 策略表达式 */
   private final String policyExpression;
@@ -96,8 +94,7 @@ public class LabelPolicyEvaluator {
   }
 
   /**
-   * 评估给定的安全标签是否匹配策略表达式 实现LBAC的访问控制规则： 1. 无策略且无标签：LBAC不介入（返回true） 2.
-   * 有策略但无标签：LBAC拒绝访问（返回false） 3.
+   * 评估给定的安全标签是否匹配策略表达式 实现LBAC的访问控制规则： 1. 无策略且无标签：LBAC不介入（返回true） 2. 有策略但无标签：LBAC拒绝访问（返回false） 3.
    * 无策略但有标签：LBAC不介入（返回true） 4. 有策略且有标签：检查策略是否包含于标签
    *
    * @param securityLabel 要评估的安全标签
@@ -110,9 +107,14 @@ public class LabelPolicyEvaluator {
       return true; // LBAC不介入
     }
 
-    // 处理无标签的情况
-    if (securityLabel == null || securityLabel.isEmpty()) {
-      return false; // 有策略但无标签，拒绝访问
+    // 处理未设置标签的情况
+    if (securityLabel == null) {
+      return false; // 有策略但未设置标签，拒绝访问
+    }
+
+    // 处理空标签的情况
+    if (securityLabel.getLabels() == null) {
+      return false; // 有策略但未设置标签，拒绝访问
     }
 
     try {
@@ -157,7 +159,8 @@ public class LabelPolicyEvaluator {
         case TOKEN_OR:
           while (!operators.isEmpty()
               && !operators.peek().equals("(")
-              && getOperatorPrecedence(operators.peek().toLowerCase()) >= getOperatorPrecedence(lowerToken)) {
+              && getOperatorPrecedence(operators.peek().toLowerCase())
+                  >= getOperatorPrecedence(lowerToken)) {
             output.add(operators.pop());
           }
           operators.push(lowerToken); // 统一使用小写的操作符
@@ -282,7 +285,7 @@ public class LabelPolicyEvaluator {
   /**
    * 评估后缀表达式
    *
-   * @param postfix       后缀表达式的标记列表
+   * @param postfix 后缀表达式的标记列表
    * @param securityLabel 安全标签
    * @return 评估结果
    * @throws LBACException 如果表达式无效
@@ -327,7 +330,7 @@ public class LabelPolicyEvaluator {
   /**
    * 评估单个标签表达式
    *
-   * @param expression    标签表达式
+   * @param expression 标签表达式
    * @param securityLabel 安全标签
    * @return 评估结果
    * @throws LBACException 如果表达式无效
@@ -352,7 +355,7 @@ public class LabelPolicyEvaluator {
   /**
    * 评估字符串标签表达式
    *
-   * @param matcher       正则表达式匹配器
+   * @param matcher 正则表达式匹配器
    * @param securityLabel 安全标签
    * @return 评估结果
    * @throws LBACException 如果表达式无效
@@ -381,7 +384,7 @@ public class LabelPolicyEvaluator {
   /**
    * 评估数字标签表达式
    *
-   * @param matcher       正则表达式匹配器
+   * @param matcher 正则表达式匹配器
    * @param securityLabel 安全标签
    * @return 评估结果
    * @throws LBACException 如果表达式无效

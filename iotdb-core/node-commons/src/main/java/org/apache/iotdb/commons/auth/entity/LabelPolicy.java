@@ -7,7 +7,7 @@ import java.util.Objects;
 public class LabelPolicy implements Serializable {
   private static final long serialVersionUID = 1L;
 
-  /** 策略表达式，例如：level = "secret" and department = "hr" */
+  /** 策略表达式，例如：level = "secret" and department = "hr"。可以为null表示空策略。 */
   private String policyExpression;
 
   /** 是否用于读访问 */
@@ -17,16 +17,15 @@ public class LabelPolicy implements Serializable {
   private boolean forWrite;
 
   /** 默认构造函数 */
-  public LabelPolicy() {
-  }
+  public LabelPolicy() {}
 
   /**
    * 使用给定的参数创建标签策略
    *
-   * @param policyExpression 策略表达式
-   * @param forRead          是否用于读访问
-   * @param forWrite          是否用于写访问
-   * @throws Illegal rgumentException  如果策略表达式为空  
+   * @param policyExpression 策略表达式，可以为null表示空策略，但不能为空字符串
+   * @param forRead 是否用于读访问
+   * @param forWrite 是否用于写访问
+   * @throws IllegalArgumentException 如果策略表达式为空字符串
    */
   public LabelPolicy(String policyExpression, boolean forRead, boolean forWrite) {
     setPolicyExpression(policyExpression);
@@ -37,7 +36,7 @@ public class LabelPolicy implements Serializable {
   /**
    * 获取策略表达式
    *
-   * @return 策略表达式
+   * @return 策略表达式，可能为null表示空策略
    */
   public String getPolicyExpression() {
     return policyExpression;
@@ -46,14 +45,28 @@ public class LabelPolicy implements Serializable {
   /**
    * 设置策略表达式
    *
-   * @param policyExpression 新的策略表达式
-   * @throws IllegalArgumentException 如果策略表达式为空
+   * @param policyExpression 新的策略表达式，可以为null表示空策略，但不能为空字符串
+   * @throws IllegalArgumentException 如果策略表达式为空字符串
    */
   public void setPolicyExpression(String policyExpression) {
-    if (policyExpression == null || policyExpression.trim().isEmpty()) {
-      throw new IllegalArgumentException("策略表达式不能为空");
+    if (policyExpression != null) {
+      String trimmed = policyExpression.trim();
+      if (trimmed.isEmpty()) {
+        throw new IllegalArgumentException("策略表达式不能为空字符串");
+      }
+      this.policyExpression = trimmed;
+    } else {
+      this.policyExpression = null;
     }
-    this.policyExpression = policyExpression.trim();
+  }
+
+  /**
+   * 检查是否为空策略
+   *
+   * @return 如果策略表达式为null则返回true，否则返回false
+   */
+  public boolean isEmpty() {
+    return policyExpression == null;
   }
 
   /**
@@ -94,10 +107,8 @@ public class LabelPolicy implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     LabelPolicy that = (LabelPolicy) o;
     return forRead == that.forRead
         && forWrite == that.forWrite
@@ -111,12 +122,11 @@ public class LabelPolicy implements Serializable {
 
   @Override
   public String toString() {
-    return 
-         "policyExpression = "
-        + policyExpression
+    return "policyExpression = "
+        + (policyExpression == null ? "null" : policyExpression)
         + ", forRead="
         + forRead
         + ", forWrite="
-        + forWrite ;
+        + forWrite;
   }
 }
